@@ -3,6 +3,7 @@ import { Sun, RotateCw } from 'lucide-react';
 
 // Hooks
 import { useCosmicEngine } from './hooks/useCosmicEngine';
+import { getDayOfYear } from './utils/astronomy';
 
 // Visualizations
 import PhaseVisual from './components/PhaseVisual';
@@ -39,7 +40,7 @@ export default function App() {
   );
 
   // Helpers
-  const dayOfYear = Math.floor((currentDate - new Date(currentDate.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+  const dayOfYear = getDayOfYear(currentDate);
   const handleDateSlider = (val) => setCurrentDate(new Date(currentDate.getFullYear(), 0, val));
   const toggleWidget = (key) => setWidgets(prev => ({ ...prev, [key]: !prev[key] }));
 

@@ -40,9 +40,21 @@ export const formatTime = (decimalHours) => {
       hours = 0;
   }
 
-  return [hours, minutes, seconds]
-    .map(v => v.toString().padStart(2, '0'))
-    .join(':');
+  const pad = (n) => (n < 10 ? '0' + n : '' + n);
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+};
+
+export const getDayOfYear = (date) => {
+  const start = new Date(date.getFullYear(), 0, 0);
+  const diff = date - start;
+  const oneDay = 1000 * 60 * 60 * 24;
+  return Math.floor(diff / oneDay);
+};
+
+export const getDateFromDayOfYear = (year, day) => {
+  const date = new Date(year, 0);
+  date.setDate(day); 
+  return date;
 };
 
 // --- Ephemeris Math (J2000 Epoch) ---

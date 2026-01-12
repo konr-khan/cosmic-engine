@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { 
   Settings, MousePointer2, Sun, RotateCw, MapPin, 
   Check, Target, Calendar, Clock, Globe, Keyboard, X, Crosshair
 } from 'lucide-react';
-import { toRadians, toDegrees, formatTime } from '../../utils/astronomy';
+import { toRadians, toDegrees, formatTime, getDayOfYear, getDateFromDayOfYear } from '../../utils/astronomy';
 import { CONFIG } from '../../utils/config';
 
 // ==========================================
@@ -37,18 +37,6 @@ const getControlAngle = (clientX, clientY, rect) => {
   return angle;
 };
 
-const getDayOfYear = (date) => {
-  const start = new Date(date.getFullYear(), 0, 0);
-  const diff = date - start;
-  const oneDay = 1000 * 60 * 60 * 24;
-  return Math.floor(diff / oneDay);
-};
-
-const getDateFromDayOfYear = (year, day) => {
-  const date = new Date(year, 0);
-  date.setDate(day); 
-  return date;
-};
 
 // ==========================================
 // 2. VISUAL SUB-COMPONENTS
@@ -178,7 +166,7 @@ const CosmicLatitudeSlider = ({ value, onChange }) => {
     );
 };
 
-const LivingMarble = ({ date, timeUTC, userLon, lat = 47, radius = 45 }) => {
+const LivingMarble = React.memo(({ date, timeUTC, userLon, lat = 47, radius = 45 }) => {
     const dayOfYear = getDayOfYear(date);
     const declination = 23.44 * Math.sin(toRadians((360 / 365) * (dayOfYear - 81)));
     
@@ -187,14 +175,17 @@ const LivingMarble = ({ date, timeUTC, userLon, lat = 47, radius = 45 }) => {
     let phaseAngle = relSunAngle % 360;
     if (phaseAngle < 0) phaseAngle += 360;
   
-    const gridLines = [];
-    for (let l = -180; l < 360; l += 30) {
-      const rad = toRadians(l - userLon);
-      const x = radius * Math.sin(rad);
-      if (Math.cos(rad) > 0) {
-        gridLines.push(<ellipse key={l} cx="0" cy="0" rx={Math.abs(x)} ry={radius} fill="none" stroke={UI_COLORS.accent} strokeWidth="0.5" opacity="0.3" />);
-      }
-    }
+    const gridLines = useMemo(() => {
+        const lines = [];
+        for (let l = -180; l < 360; l += 30) {
+            const rad = toRadians(l - userLon);
+            const x = radius * Math.sin(rad);
+            if (Math.cos(rad) > 0) {
+                lines.push(<ellipse key={l} cx="0" cy="0" rx={Math.abs(x)} ry={radius} fill="none" stroke={UI_COLORS.accent} strokeWidth="0.5" opacity="0.3" />);
+            }
+        }
+        return lines;
+    }, [userLon, radius]);
   
     const theta = toRadians(phaseAngle); 
     const r = radius;
@@ -227,9 +218,9 @@ const LivingMarble = ({ date, timeUTC, userLon, lat = 47, radius = 45 }) => {
         <circle r={radius} fill="url(#atmosGradient)" style={{ mixBlendMode: 'screen' }} opacity="0.3" pointerEvents="none" />
       </g>
     );
-};
+});
 
-const ControlRing = ({ config, value, max, formatValue, rangeOffset = 0 }) => {
+const ControlRing = React.memo(({ config, value, max, formatValue, rangeOffset = 0 }) => {
   const { r, w, color } = config;
   let normalized = value - rangeOffset;
   let angle = (normalized / max) * 360;
@@ -263,7 +254,7 @@ const ControlRing = ({ config, value, max, formatValue, rangeOffset = 0 }) => {
       </g>
     </g>
   );
-};
+});
 
 const DashboardItem = ({ label, value, color, icon: Icon, action, onEdit }) => (
     <div className="flex flex-col justify-between bg-slate-800/50 p-2 sm:p-3 rounded-xl border border-slate-700/50 w-full h-full relative group hover:border-slate-600 transition-colors">

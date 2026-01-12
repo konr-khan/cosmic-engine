@@ -6,6 +6,19 @@ import {
 import { CONFIG } from '../utils/config';
 import { toRadians, getSunHours, formatTime } from '../utils/astronomy';
 
+const CustomTooltip = React.memo(({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+        const date = new Date(new Date().getFullYear(), 0, label);
+        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return (
+            <div className="bg-slate-800 px-3 py-2 rounded shadow border border-slate-700 text-xs font-mono">
+                <span className="font-bold text-slate-200">{dateStr}</span>
+            </div>
+        );
+    }
+    return null;
+});
+
 const AnnualChart = ({ latitude = 47, currentDay, onDayChange }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [hoverDay, setHoverDay] = useState(null);
@@ -33,7 +46,7 @@ const AnnualChart = ({ latitude = 47, currentDay, onDayChange }) => {
   }, [latitude]);
 
   const activeDay = hoverDay !== null ? hoverDay : currentDay;
-  const activeData = almanacData.find(d => d.day === activeDay);
+  const activeData = almanacData[activeDay - 1];
 
   const handleInteraction = (e) => { 
     if (e && e.activeLabel) { 
@@ -45,10 +58,6 @@ const AnnualChart = ({ latitude = 47, currentDay, onDayChange }) => {
   };
 
   const formatShortTime = (decimal) => formatTime(decimal).slice(0, 5);
-  const formatTooltipDate = (dayNumber) => {
-    const date = new Date(new Date().getFullYear(), 0, dayNumber);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
 
   return (
     <div className="bg-slate-900 rounded-2xl shadow-lg border border-slate-800 p-6 h-full flex flex-col select-none">
@@ -100,13 +109,7 @@ const AnnualChart = ({ latitude = 47, currentDay, onDayChange }) => {
                 reversed={true} 
             />
             
-            <RechartsTooltip 
-                content={({ label }) => (
-                   <div className="bg-slate-800 px-3 py-2 rounded shadow border border-slate-700 text-xs font-mono">
-                        <span className="font-bold text-slate-200">{formatTooltipDate(label)}</span>
-                    </div>
-                )} 
-            />
+            <RechartsTooltip content={<CustomTooltip />} />
             
             {/* Layers */}
             <Area dataKey="astro" stroke="none" fill="#1e293b" fillOpacity={1} isAnimationActive={false} />
